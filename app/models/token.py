@@ -39,7 +39,7 @@ class Token(db.Model, TimestampMixin):
         return token.id
 
     @staticmethod
-    def validate(tok):
+    def validate(tok, type):
         token_row = Token.query.get(tok)
         if not token_row:
             return False
@@ -49,6 +49,8 @@ class Token(db.Model, TimestampMixin):
         max_age = token_row.expiration
         try:
             data = URLSafeTimedSerializer(config.SECRET_KEY).loads(token, max_age, salt=salt)
+            if type and not data.get(type):
+                return False
         except Exception:
             return False
         return data

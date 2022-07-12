@@ -15,7 +15,7 @@ class Comment(db.Model, TimestampMixin):
             'id': self.id,
             'body': self.body,
             'author': self.author.username,
-            'delete_url': url_for('posts.delete_comment', post_id=self.post_id, comment_id=self.id)
+            'delete_comment': url_for('posts.delete_comment', post_id=self.post_id, comment_id=self.id)
         }
 
     def __repr__(self):

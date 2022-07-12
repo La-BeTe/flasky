@@ -17,7 +17,7 @@ class Blueprint:
         def handle_404(_):
             return build_response(404, 'Invalid request path or method.')
         
-        from app.schemas import ValidationError
+        from app.validator import ValidationError
         @app.errorhandler(ValidationError)
         def handle_validation_error(err):
             return build_response(400, str(err))
