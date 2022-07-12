@@ -1,13 +1,11 @@
 from flask import Flask
 from flask_mail import Mail
-from flask_sqlalchemy import SQLAlchemy
 
 
-from .config import Config
+from .models import db
+from .configuration import Config
 from .blueprints import Blueprint
 
-
-db = SQLAlchemy()
 mail = Mail()
 config = Config()
 

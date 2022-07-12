@@ -1,3 +1,35 @@
+from cerberus import Validator
+
+class ValidationError(ValueError):
+    pass
+
+
+def validate_confirm_password(data):
+    password = data.get('password') or data.get('new_password')
+    confirm_password = data.get('confirm_password')
+    if password != confirm_password:
+            raise ValidationError('Password and Confirm Password fields should be equal.')
+
+def validate(schema, data):
+    validator = Validator(schema, allow_unknown=True)
+    result = validator.validated(data)
+    if result is None:
+        error_messages = []
+        for key in validator.errors.keys():
+            error_message = schema[key].get('meta') and (schema[key]['meta'].get('error_message'))
+            if callable(error_message):
+                error_message = error_message(data, validator.errors[key])
+            if isinstance(error_message, str):
+                error_messages.append(error_message)
+        first_error_message = error_messages[0] if len(error_messages) > 0 else 'A validation error occurred.'
+        raise ValidationError(first_error_message)
+    for field in schema:
+        value = schema[field]
+        func = value.get('meta') and value['meta'].get('custom_validator')
+        if func:
+            func(data)
+    return result
+
 REGISTER_SCHEMA = {
     'email': {
         'type': 'string',
@@ -10,9 +42,9 @@ REGISTER_SCHEMA = {
     'username': {
         'type': 'string',
         'required': True,
-        'regex': r'^[a-zA-Z][\w]{6,}$',
+        'regex': r'^[a-zA-Z][\w]{5,}$',
         'meta': {
-            'error_message': 'Username must start with a letter and can only contain letters, numbers or underscores.'
+            'error_message': 'Username must contain more than 5 characters, start with a letter and can only contain letters, numbers or underscores.'
         }
     },
     'password': {
@@ -27,7 +59,8 @@ REGISTER_SCHEMA = {
         'type': 'string',
         'required': True,
         'meta': {
-            'error_message': 'Password confirmation is required.'
+            'error_message': 'Password confirmation is required.',
+            'custom_validator': validate_confirm_password
         }
     }
 }
@@ -70,3 +103,25 @@ RESET_PASSWORD_END_SCHEMA = {
     'new_password': REGISTER_SCHEMA['password'],
     'confirm_password': REGISTER_SCHEMA['confirm_password']
 }
+
+CREATE_POST_SCHEMA = {
+    'body': {
+        'type': 'string',
+        'required': True,
+        'empty': False,
+        'meta': {
+            'error_message': 'Post body is required.'
+        }
+    }
+}
+CREATE_COMMENT_SCHEMA = {
+    'body': {
+        'type': 'string',
+        'required': True,
+        'empty': False,
+        'meta': {
+            'error_message': 'Comment body is required.'
+        }
+    }
+}
+
